@@ -2,197 +2,309 @@
 
 ## De qué se trata
 
-Una app que genera chistes malos (dad jokes) en español usando inteligencia artificial.
-Pero con una condición: **la API key de Gemini nunca debe estar visible en el navegador.**
+Una app que genera chistes malos en español usando inteligencia artificial, pero con una condición central: **la API key de Gemini nunca debe estar visible en el navegador**.
 
-Vamos a construir un flujo seguro:
+El flujo seguro que vamos a construir es:
 
-```
-Navegador  →  /api/joke  →  Serverless Function  →  process.env  →  Gemini
-    ↑                        ↑
-  código público           código privado (Vercel)
-  visible en DevTools       la key nunca llega acá
-```
-
-Este es el mismo patrón que usan apps como Notion, Linear o Figma para consumir APIs de terceros sin exponer credenciales.
-
----
-
-## Lo que ya está listo (no tocar)
-
-| Archivo | Rol |
-|---------|-----|
-| ✅ index.html | Interfaz completa — botón, caja de chiste, caja de error |
-| ✅ styles.css | Dark mode minimalista, mobile-first |
-| ✅ package.json | Dependencia `@google/generative-ai` ya incluida |
-| ✅ .gitignore | `node_modules`, `.env`, `.vercel` ya excluidos |
-| ✅ .env.example | Template para que copies tu API key |
-
----
-
-## Lo que vas a construir (el delta)
-
-| Archivo | Estado | Tu tarea |
-|---------|--------|----------|
-| `app.js` | ⚠️ esqueleto con anti-patrón comentado | Escribir el frontend completo |
-| `api/joke.js` | ⚠️ esqueleto con TODOs | Escribir la serverless function |
-
----
-
-## Paso a paso en clase (7 pasos)
-
-### Paso 1 — app.js: chiste hardcodeado
-
-Antes de tocar el backend, verificamos que el DOM funciona.
-
-```
-btn → click → mostrar un chiste fijo en pantalla
+```txt
+Navegador → /api/joke → Serverless Function → process.env → Gemini
+    ↑              ↑
+código público    código privado del servidor
+visible           la key nunca llega al browser
 ```
 
-¿Por qué hardcodeado primero? Para aislar problemas. Si el botón no funciona, no tiene sentido investigar el backend.
+Este patrón es el que se usa cuando una app frontend necesita consumir una API externa con credenciales privadas.
 
-**Qué aprendés:** Referencias al DOM con `getElementById`, event listeners, toggle de clases CSS.
+## Qué ya está listo
 
----
+Para no sumar complejidad innecesaria, el Starter ya trae resuelta toda la parte de HTML, CSS e interacción con el DOM.
 
-### Paso 2 — api/joke.js: versión MOCK
+| Archivo | Estado | Rol |
+|---------|--------|-----|
+| `index.html` | Completo | Interfaz: botón, caja de chiste y caja de error |
+| `styles.css` | Completo | Dark mode minimalista, mobile-first |
+| `app.js` | Completo para DOM | Eventos, loading, error y chiste hardcodeado |
+| `package.json` | Completo | Dependencia `@google/generative-ai` y script local |
+| `.gitignore` | Completo | Excluye `node_modules`, `.env`, `.vercel` |
+| `.env.example` | Completo | Template para crear `.env` |
 
-Creás tu primera **Serverless Function de Vercel**.
+## Qué vas a construir en clase
 
-```
-handler(req, res)  →  validar POST  →  devolver { joke: "[MOCK]..." }
-```
+El foco de M3L7 no es manipular el DOM. El foco es construir el puente seguro entre frontend y una API externa.
 
-Sin Gemini todavía. Sin API key. Sin gastar tokens.
+| Archivo | Qué tiene ahora | Qué modifica el alumno |
+|---------|-----------------|-------------------------|
+| `app.js` | DOM listo + `getJoke()` hardcodeado | Reemplazar solo `getJoke()` por `fetch("/api/joke")` |
+| `api/joke.js` | Skeleton con TODOs | Crear la Serverless Function mock y luego Gemini real |
+| `.env` | No existe en Starter | Crear desde `.env.example` y pegar `GEMINI_API_KEY` |
 
-**Qué aprendés:**
-- Cómo se estructura una serverless function (`export default async function handler(req, res)`)
-- Qué hace cada parte: `req.method`, `res.status().json()`
-- Por qué el mock permite probar el flujo entero sin depender de la API externa
+## Cómo levantar el Starter
 
----
-
-### Paso 3 — app.js: conectar con fetch
-
-Reemplazás el chiste hardcodeado por una llamada real a `fetch('/api/joke')`.
-
-**Qué aprendés:**
-- `fetch` con método POST y JSON en el body
-- Manejo de errores con `try/catch/finally`
-- Estados de UI: loading, éxito, error
-- Por qué el frontend llama a `/api/joke` y NO directamente a Gemini
-
----
-
-### Paso 4 — vercel dev: probar el mock
+Desde esta carpeta:
 
 ```bash
 npm install
 npm run local
 ```
 
-Abrís `http://localhost:3000`, hacés clic y ves `[MOCK]`. El flujo completo funciona sin haber tocado Gemini.
-
-**Qué aprendés:** Cómo se levanta un entorno local de Vercel, cómo se ven las requests en DevTools → Network.
-
-También podés correr directamente:
+O directo:
 
 ```bash
 npx --yes vercel dev
 ```
 
----
-
-### Paso 5 — .env: agregar la API key real
-
-```bash
-cp .env.example .env   # editar y pegar tu GEMINI_API_KEY
-```
-
-**Qué aprendés:**
-- Qué es un archivo `.env` y por qué **nunca** se sube a Git
-- Que las variables de entorno se cargan en `process.env` del servidor
-- Que hay que reiniciar `vercel dev` para que los cambios de `.env` surtan efecto
-
----
-
-### Paso 6 — api/joke.js: Gemini real
-
-Reemplazás el mock por código que usa `@google/generative-ai` con `process.env.GEMINI_API_KEY`.
-
-Este es el **momento clave de toda la clase**. Acá la API key aparece por primera vez, pero SOLO en el servidor.
-
-**Qué aprendés:**
-- `import { GoogleGenerativeAI }` de la librería oficial de Google
-- Cómo inicializar el modelo y mandar un prompt
-- Que `process.env.GEMINI_API_KEY` solo existe en el servidor — el navegador no tiene acceso
-
----
-
-### Paso 7 — Verificar seguridad
-
-```js
-F12 → Sources → buscar "AIza" → no aparece nada
-```
-
-**Qué aprendés:** La confirmación visual de que la API key nunca llegó al navegador. Si no está en Sources, no hay forma de que un usuario la robe.
-
----
-
-## Referencia: el patrón de seguridad
-
-```
-❌ INSEGURO:
-   Navegador → API key visible → Gemini
-               (cualquiera la ve en DevTools)
-
-✅ SEGURO (este proyecto):
-   Navegador → /api/joke → Serverless Function → process.env → Gemini
-               ↑                                    ↑
-          solo conoce          la key vive acá,
-          el endpoint          el navegador no la ve
-```
-
----
-
-## Setup inicial
-
-```bash
-npm install              # instalar dependencias
-npm run local            # levantar servidor local con Vercel Dev
-```
-
-## Prerequisitos
-
-- **Node.js** instalado (`node -v`)
-- **Vercel CLI** instalado — si no: `npm install -g vercel`
-- **API key de Gemini** — https://aistudio.google.com → Get API key
-
----
-
-> Este Starter es el punto de partida. Al final de la clase vas a tener
-> exactamente el mismo proyecto que está en `M3L7-Resolution/`.
-
----
-
-## Nota sobre `npm run dev`
-
-No usar `npm run dev` en este proyecto.
-
-Si `package.json` define `"dev": "vercel dev"`, Vercel detecta una invocación recursiva y corta el arranque con este error:
+Abrir:
 
 ```txt
-vercel dev must not recursively invoke itself
+http://localhost:3000
 ```
 
-Por eso el script se llama `local`:
+No uses `live-server` para este ejercicio. M3L7 necesita ejecutar la carpeta `api/`, y eso lo hace Vercel Dev.
+
+No uses `npm run dev`. Si un proyecto define `"dev": "vercel dev"`, Vercel puede detectar una invocación recursiva. Por eso el script se llama `local`.
+
+## Estado inicial esperado
+
+Al abrir el Starter y tocar el botón, debería aparecer un chiste fijo:
+
+```txt
+¿Por qué el libro de matemáticas estaba triste? Porque tenía demasiados problemas.
+```
+
+Eso confirma que:
+
+- el HTML carga;
+- el CSS carga;
+- el botón funciona;
+- el evento click funciona;
+- los estados de loading/error/success ya están conectados.
+
+Recién después de confirmar eso, se trabaja el backend.
+
+## Paso a paso en clase
+
+### Paso 1 — Verificar frontend hardcodeado
+
+Abrir la app y hacer click en:
+
+```txt
+Generá un chiste
+```
+
+Qué decir:
+
+> “El DOM ya está resuelto. No vamos a gastar tiempo de esta clase escribiendo `getElementById` ni event listeners. Lo que nos importa hoy es que el frontend no llame a Gemini directamente.”
+
+Archivo:
+
+```txt
+app.js
+```
+
+La función inicial es:
+
+```js
+async function getJoke() {
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  return "¿Por qué el libro de matemáticas estaba triste? Porque tenía demasiados problemas."
+}
+```
+
+### Paso 2 — Crear `/api/joke` mock
+
+Archivo:
+
+```txt
+api/joke.js
+```
+
+Primera versión:
+
+```js
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" })
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 600))
+
+  return res.status(200).json({
+    joke: "[MOCK] ¿Por qué el programador usa lentes? Porque no puede ver C#.",
+  })
+}
+```
+
+Objetivo:
+
+- entender la forma de una Serverless Function;
+- probar `/api/joke` sin gastar tokens;
+- verificar que Vercel Dev ejecuta backend local.
+
+### Paso 3 — Reemplazar `getJoke()` por `fetch("/api/joke")`
+
+En `app.js`, reemplazar únicamente la función `getJoke()`:
+
+```js
+async function getJoke() {
+  const response = await fetch("/api/joke", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic: "anything" }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(err.error || "Error del servidor")
+  }
+
+  const data = await response.json()
+  return data.joke
+}
+```
+
+No tocar el event listener ni los helpers de UI. Ya están listos.
+
+### Paso 4 — Probar el mock completo
+
+Levantar:
 
 ```bash
 npm run local
 ```
 
-También podés correr directamente:
+Abrir:
+
+```txt
+http://localhost:3000
+```
+
+Click en el botón.
+
+Resultado esperado:
+
+```txt
+[MOCK] ¿Por qué el programador usa lentes? Porque no puede ver C#.
+```
+
+### Paso 5 — Crear `.env`
+
+Copiar:
 
 ```bash
-npx --yes vercel dev
+copy .env.example .env
 ```
+
+O manualmente crear `.env`:
+
+```txt
+GEMINI_API_KEY=tu-api-key-real
+```
+
+La key se obtiene en:
+
+```txt
+https://aistudio.google.com
+```
+
+Importante:
+
+> “`.env` nunca se sube a Git. Por eso está en `.gitignore`.”
+
+### Paso 6 — Reemplazar mock por Gemini real
+
+En `api/joke.js`, reemplazar el mock por:
+
+```js
+import { GoogleGenerativeAI } from "@google/generative-ai"
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" })
+  }
+
+  try {
+    const apiKey = process.env.GEMINI_API_KEY
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "GEMINI_API_KEY no configurada" })
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+
+    const prompt =
+      "Generá un dad joke corto en español. " +
+      "Debe tener juego de palabras o remate inesperado. " +
+      "Solo el chiste, sin explicaciones."
+
+    const result = await model.generateContent(prompt)
+    const joke = result.response.text().trim()
+
+    return res.status(200).json({ joke })
+  } catch (error) {
+    console.error("[/api/joke] Error:", error.message)
+    return res.status(500).json({ error: "Error al generar el chiste" })
+  }
+}
+```
+
+### Paso 7 — Verificar seguridad
+
+Abrir DevTools:
+
+```txt
+F12 → Sources
+```
+
+Buscar:
+
+```txt
+GEMINI_API_KEY
+AIza
+```
+
+Resultado esperado:
+
+```txt
+Sin resultados
+```
+
+Qué decir:
+
+> “El navegador solo conoce `/api/joke`. No conoce Gemini, no importa `@google/generative-ai` y no ve la API key.”
+
+## Anti-patrón que evitamos
+
+No hacer esto en `app.js`:
+
+```js
+const API_KEY = "AIzaSy..."
+
+fetch("https://generativelanguage.googleapis.com/...", {
+  headers: {
+    Authorization: `Bearer ${API_KEY}`,
+  },
+})
+```
+
+Eso deja la key visible para cualquier usuario.
+
+## Resultado final
+
+Al terminar, el Starter debería comportarse como `M3L7-Resolution`:
+
+- botón genera chistes desde Gemini;
+- frontend llama solo a `/api/joke`;
+- la serverless function lee `process.env.GEMINI_API_KEY`;
+- la key no aparece en DevTools;
+- el error se muestra en la UI si falla el backend.
+
+## Troubleshooting
+
+| Problema | Causa probable | Solución |
+|----------|----------------|----------|
+| `npm run dev` falla con recursión | Script mal nombrado | Usar `npm run local` |
+| `/api/joke` da 404 | Se levantó con `live-server` | Usar `npx --yes vercel dev` |
+| `GEMINI_API_KEY no configurada` | Falta `.env` | Crear `.env` y reiniciar Vercel Dev |
+| `Cannot find module @google/generative-ai` | Falta instalar dependencias | Ejecutar `npm install` |
+| La key aparece en DevTools | Se puso en frontend | Moverla a `.env` y leerla desde `process.env` |

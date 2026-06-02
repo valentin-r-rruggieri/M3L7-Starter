@@ -15,7 +15,7 @@
  *
  * Si una key real vive en app.js, cualquiera la puede ver en DevTools → Sources.
  */
-
+const API_KEY = "AIzaSyD-ejemplo-esto-es-lo-que-nunca-hay-que-hacer"
 const btn = document.getElementById("joke-btn");
 const output = document.getElementById("joke-output");
 const text = document.getElementById("joke-text");

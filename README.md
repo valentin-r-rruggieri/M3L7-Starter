@@ -88,12 +88,18 @@ Reemplazás el chiste hardcodeado por una llamada real a `fetch('/api/joke')`.
 
 ```bash
 npm install
-vercel dev
+npm run local
 ```
 
 Abrís `http://localhost:3000`, hacés clic y ves `[MOCK]`. El flujo completo funciona sin haber tocado Gemini.
 
 **Qué aprendés:** Cómo se levanta un entorno local de Vercel, cómo se ven las requests en DevTools → Network.
+
+También podés correr directamente:
+
+```bash
+npx --yes vercel dev
+```
 
 ---
 
@@ -153,7 +159,7 @@ F12 → Sources → buscar "AIza" → no aparece nada
 
 ```bash
 npm install              # instalar dependencias
-vercel dev               # levantar servidor local
+npm run local            # levantar servidor local con Vercel Dev
 ```
 
 ## Prerequisitos
@@ -166,3 +172,27 @@ vercel dev               # levantar servidor local
 
 > Este Starter es el punto de partida. Al final de la clase vas a tener
 > exactamente el mismo proyecto que está en `M3L7-Resolution/`.
+
+---
+
+## Nota sobre `npm run dev`
+
+No usar `npm run dev` en este proyecto.
+
+Si `package.json` define `"dev": "vercel dev"`, Vercel detecta una invocación recursiva y corta el arranque con este error:
+
+```txt
+vercel dev must not recursively invoke itself
+```
+
+Por eso el script se llama `local`:
+
+```bash
+npm run local
+```
+
+También podés correr directamente:
+
+```bash
+npx --yes vercel dev
+```

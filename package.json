@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Dad Joke Generator con Vercel Serverless Functions",
   "scripts": {
-    "dev": "vercel dev"
+    "local": "npx --yes vercel dev"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0"

@@ -5,7 +5,7 @@
  * ❌ ANTI-PATRÓN: así NO se hace (la API key queda expuesta)
  * ============================================================
  *
- * const API_KEY = 'AIzaSyD-ejemplo-esto-es-lo-que-nunca-hay-que-hacer'
+ * 
  *
  * async function getJokeInseguro() {
  *   const r = await fetch('https://generativelanguage.googleapis.com/v1/...', {
@@ -21,7 +21,7 @@
  *    y la serverless function llama a Gemini con la key desde process.env.
  *    La key nunca llega al navegador.
  */
-
+const API_KEY = 'AIzaSyD-ejemplo-esto-es-lo-que-nunca-hay-que-hacer'
 // TODO 1: Obtener referencias a los elementos del DOM
 // const btn    = document.getElementById('joke-btn')
 // const output = document.getElementById('joke-output')
